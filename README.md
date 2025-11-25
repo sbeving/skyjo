@@ -2,6 +2,8 @@
 
 A complete **Skyjo** card game score tracking application built with **Python** and **Streamlit**. Track scores across 10 rounds, visualize player performance with real-time graphs, and manage your game sessions with ease!
 
+## --> [DEMO](https://skyjoo.streamlit.app) <--
+
 ## ✨ Features
 
 - 🎮 **Multiple Players**: Support for 2-8 players
