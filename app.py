@@ -112,18 +112,48 @@ def reset_game():
     st.query_params.clear()
 
 def copy_to_clipboard(text):
-    """Copy text to clipboard using JavaScript"""
+    """Copy text to clipboard using JavaScript with better implementation"""
+    # Escape single quotes in the text
+    escaped_text = text.replace("'", "\\'")
+    
     st.components.v1.html(
         f"""
+        <div id="copy-helper">
+            <textarea id="copy-text" style="position: absolute; left: -9999px;">{text}</textarea>
+        </div>
         <script>
-            navigator.clipboard.writeText('{text}').then(function() {{
-                console.log('Copied to clipboard successfully!');
-            }}, function(err) {{
-                console.error('Could not copy text: ', err);
-            }});
+            // Method 1: Try modern clipboard API
+            if (navigator.clipboard && window.isSecureContext) {{
+                navigator.clipboard.writeText('{escaped_text}').then(
+                    function() {{
+                        console.log('Copied to clipboard successfully!');
+                        parent.postMessage({{type: 'copy_success'}}, '*');
+                    }}, 
+                    function(err) {{
+                        console.error('Clipboard API failed:', err);
+                        fallbackCopy();
+                    }}
+                );
+            }} else {{
+                // Method 2: Fallback for older browsers or insecure contexts
+                fallbackCopy();
+            }}
+            
+            function fallbackCopy() {{
+                try {{
+                    var copyText = document.getElementById('copy-text');
+                    copyText.select();
+                    copyText.setSelectionRange(0, 99999);
+                    document.execCommand('copy');
+                    console.log('Fallback copy successful!');
+                    parent.postMessage({{type: 'copy_success'}}, '*');
+                }} catch (err) {{
+                    console.error('Fallback copy failed:', err);
+                }}
+            }}
         </script>
         """,
-        height=0,
+        height=30,
     )
 
 def create_score_graph():
@@ -285,14 +315,14 @@ with st.sidebar:
                 value=share_url,
                 height=80,
                 help="Copy and send this link to transfer scoring to another device",
-                key="share_url_display"
+                key="share_url_display",
             )
             
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("📋 Copy Link", key="copy_btn", width="stretch"):
                     copy_to_clipboard(share_url)
-                    st.success("✅ Copied to clipboard!")
+                    st.toast("✅ Link copied to clipboard!", icon="✅")
             with col2:
                 # WhatsApp share button
                 whatsapp_text = urllib.parse.quote(f"Join my Skyjo game! Round {st.session_state.current_round}/{st.session_state.max_rounds}\n{share_url}")
