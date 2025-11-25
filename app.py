@@ -233,7 +233,7 @@ with st.sidebar:
         )
         
         # Player names
-        player_names = ["Saleh","Malek","Salim","Mohamed"]
+        player_names = []
         for i in range(num_players):
             name = st.text_input(
                 f"Player {i+1} Name",
