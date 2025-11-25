@@ -111,6 +111,21 @@ def reset_game():
     # Clear query params
     st.query_params.clear()
 
+def copy_to_clipboard(text):
+    """Copy text to clipboard using JavaScript"""
+    st.components.v1.html(
+        f"""
+        <script>
+            navigator.clipboard.writeText('{text}').then(function() {{
+                console.log('Copied to clipboard successfully!');
+            }}, function(err) {{
+                console.error('Could not copy text: ', err);
+            }});
+        </script>
+        """,
+        height=0,
+    )
+
 def create_score_graph():
     """Create real-time score graph using Plotly"""
     if not st.session_state.scores or not any(st.session_state.scores.values()):
@@ -218,7 +233,7 @@ with st.sidebar:
         )
         
         # Player names
-        player_names = []
+        player_names = ["Saleh","Malek","Salim","Mohamed"]
         for i in range(num_players):
             name = st.text_input(
                 f"Player {i+1} Name",
@@ -252,6 +267,39 @@ with st.sidebar:
         st.subheader("📋 Players")
         for i, player in enumerate(st.session_state.players, 1):
             st.text(f"{i}. {player}")
+        
+        # Share match button
+        st.markdown("---")
+        st.subheader("🔗 Share Match")
+        
+        # Get current URL with state
+        current_state = st.query_params.get("state", None)
+        if current_state:
+            # Construct full shareable URL
+            import urllib.parse
+            base_url = "http://skyjoo.streamlit.app"  # Change this to your deployed URL
+            share_url = f"{base_url}/?state={current_state}"
+            
+            st.text_area(
+                "Share this link:",
+                value=share_url,
+                height=80,
+                help="Copy and send this link to transfer scoring to another device",
+                key="share_url_display"
+            )
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("📋 Copy Link", key="copy_btn", width="stretch"):
+                    copy_to_clipboard(share_url)
+                    st.success("✅ Copied to clipboard!")
+            with col2:
+                # WhatsApp share button
+                whatsapp_text = urllib.parse.quote(f"Join my Skyjo game! Round {st.session_state.current_round}/{st.session_state.max_rounds}\n{share_url}")
+                whatsapp_url = f"https://wa.me/?text={whatsapp_text}"
+                st.link_button("💬 WhatsApp", whatsapp_url, width="stretch")
+            
+            st.caption("💡 **Battery low?** Share this link to continue on another device!")
 
 # Main content area
 if not st.session_state.game_started:
